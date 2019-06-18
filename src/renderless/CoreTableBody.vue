@@ -2,29 +2,24 @@
 export default {
     name: 'CoreTableBody',
 
-    inject: ['state', 'i18n', 'ajax', 'actionPath', 'buttonAction', 'isChild', 'refreshPageSelected'],
+    inject: [
+        'state', 'i18n', 'ajax', 'actionPath', 'buttonAction', 'isChild',
+        'refreshPageSelected', 'hiddenColumns',
+    ],
 
     data: () => ({
         row: null,
     }),
 
     computed: {
-        hiddenColumns() {
-            return this.state.ready
-                ? this.state.template.columns && this.state.template.columns
-                    .filter(column => column.meta.hidden && column.meta.visible)
-                : [];
-        },
         hiddenCount() {
-            return this.hiddenColumns.length;
+            return this.hiddenColumns().length;
         },
         hiddenColSpan() {
             return this.state.template.columns.length
-                    - this.hiddenColumns.length
-                    + (this.state.template.actions ? 2 : 1);
-        },
-        cascadesHiddenControls() {
-            return !this.state.template.crtNo && this.hiddenCount > 0;
+                + (this.state.template.preview && !this.hiddenColumns.length ? 1 : 0)
+                - (this.hiddenColumns.length ? this.hiddenColumns.length - 1 : 0)
+                + (this.state.template.actions ? 2 : 1);
         },
     },
 
@@ -50,7 +45,6 @@ export default {
         isExpanded(row) {
             return this.state.expanded.includes(row.dtRowId);
         },
-
         toggleHidden(row, index) {
             if (!this.isExpanded(row)) {
                 this.state.expanded.push(row.dtRowId);
@@ -63,7 +57,7 @@ export default {
             this.state.body.data.splice(index + 1, 1);
         },
         addChildRow(row, index) {
-            const newRow = this.hiddenColumns.reduce((collector, column) => {
+            const newRow = this.hiddenColumns().reduce((collector, column) => {
                 collector.push({ column, value: row[column.name], rowCrtNo: index });
                 return collector;
             }, []);
@@ -103,8 +97,6 @@ export default {
             isExpanded: this.isExpanded,
             rowCrtNo: this.rowCrtNo,
             hiddenCount: this.hiddenCount,
-            toggleHidden: this.toggleHidden,
-            cascadesHiddenControls: this.cascadesHiddenControls,
             hiddenColSpan: this.hiddenColSpan,
             selectBindings: row => ({
                 checked: this.state.selected.includes(row.dtRowId),
@@ -124,8 +116,7 @@ export default {
             hiddenEvents: (row, index) => ({
                 click: () => this.toggleHidden(row, index),
             }),
-            cellBindings: (row, column, index) => ({
-                hiddenControls: this.cascadesHiddenControls && index === 0,
+            cellBindings: (row, column) => ({
                 column,
                 value: row[column.name],
             }),

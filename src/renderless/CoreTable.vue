@@ -2,7 +2,9 @@
 import accounting from 'accounting-js';
 
 export default {
+
     name: 'CoreTable',
+
     props: {
         errorHandler: {
             type: Function,
@@ -14,17 +16,21 @@ export default {
             type: Object,
             default: null,
         },
+        i18n: {
+            type: Function,
+            default: v => v,
+        },
         id: {
             type: String,
             required: true,
         },
-        intervals: {
+        initParams: {
             type: Object,
             default: null,
         },
-        i18n: {
-            type: Function,
-            default: v => v,
+        intervals: {
+            type: Object,
+            default: null,
         },
         params: {
             type: Object,
@@ -35,6 +41,7 @@ export default {
             required: true,
         },
     },
+
     data: () => ({
         state: {
             apiVersion: null,
@@ -52,7 +59,9 @@ export default {
             body: {},
             meta: {},
         },
+        requestCanceler: null,
     }),
+
     computed: {
         preferencesKey() {
             return `VueTable_${this.id}_preferences`;
@@ -83,6 +92,7 @@ export default {
             };
         },
     },
+
     provide() {
         return {
             action: this.action,
@@ -97,6 +107,7 @@ export default {
             hasContent: this.hasContent,
             hasEntries: this.hasEntries,
             hasFooter: this.hasFooter,
+            hiddenColumns: this.hiddenColumns,
             i18n: this.i18n,
             id: this.id,
             init: this.init,
@@ -113,6 +124,7 @@ export default {
             visibleColumns: this.visibleColumns,
         };
     },
+
     watch: {
         filters: {
             handler() {
@@ -144,28 +156,29 @@ export default {
         },
         preferences: {
             handler() {
-                if (this.hasContent()) {
-                    this.savePreferences();
-                }
+                this.savePreferences();
             },
             deep: true,
         },
     },
+
     created() {
         this.init();
     },
+
     methods: {
         init() {
-            axios.get(this.path).then(({ data }) => {
-                const { apiVersion, template, meta } = data;
-                this.state.apiVersion = apiVersion;
-                this.state.template = template;
-                this.state.meta = meta;
-                this.loadPreferences();
-                this.state.ready = true;
-                this.$emit('ready');
-                this.fetch();
-            }).catch(this.errorHandler);
+            axios.get(this.path, { params: { ...this.initParams } })
+                .then(({ data }) => {
+                    const { apiVersion, template, meta } = data;
+                    this.state.apiVersion = apiVersion;
+                    this.state.template = template;
+                    this.state.meta = meta;
+                    this.loadPreferences();
+                    this.state.ready = true;
+                    this.$emit('ready');
+                    this.fetch();
+                }).catch(this.errorHandler);
         },
         loadPreferences() {
             const preferences = this.userPreferences();
@@ -210,14 +223,32 @@ export default {
             this.state.meta.search = '';
             this.init();
         },
+        request() {
+            if (this.requestCanceler) {
+                this.requestCanceler.cancel();
+            }
+
+            this.requestCanceler = axios.CancelToken.source();
+
+            return this.state.template.method === 'GET'
+                ? axios[this.state.template.method.toLowerCase()](
+                    this.state.template.readPath, {
+                        ...this.readRequest(),
+                        cancelToken: this.requestCanceler.token,
+                    },
+                )
+                : axios[this.state.template.method.toLowerCase()](
+                    this.state.template.readPath,
+                    this.readRequest(),
+                    { cancelToken: this.requestCanceler.token },
+                );
+        },
         fetch() {
             this.state.meta.loading = true;
             this.state.expanded = [];
             this.$emit('fetching');
-            axios[this.state.template.method.toLowerCase()](
-                this.state.template.readPath,
-                this.readRequest(),
-            ).then((response) => {
+
+            this.request().then((response) => {
                 const body = response.data;
                 this.state.meta.loading = false;
                 this.state.meta.forceInfo = false;
@@ -233,7 +264,10 @@ export default {
                 this.$nextTick(() => this.refreshPageSelected());
             }).catch((error) => {
                 this.state.meta.loading = false;
-                this.errorHandler(error);
+
+                if (!axios.isCancel(error)) {
+                    this.errorHandler(error);
+                }
             });
         },
         readRequest(method = null) {
@@ -261,6 +295,7 @@ export default {
                     fullInfoRecordLimit: this.state.meta.fullInfoRecordLimit,
                 }),
             };
+
             return (method || this.state.template.method) === 'GET'
                 ? { params }
                 : params;
@@ -367,12 +402,12 @@ export default {
                 meta: {
                     start: 0,
                     length: this.state.body.filtered,
-                    sort: this.state.template.sort,
-                    enum: this.state.template.enum,
-                    date: this.state.template.date,
-                    translatable: this.state.template.translatable,
+                    sort: this.state.meta.sort,
+                    enum: this.state.meta.enum,
+                    date: this.state.meta.date,
+                    translatable: this.state.meta.translatable,
                     search: this.state.meta.search,
-                    comparisonOperator: this.state.template.comparisonOperator,
+                    comparisonOperator: this.state.meta.comparisonOperator,
                 },
             };
             return this.state.template.method === 'GET'
@@ -381,10 +416,10 @@ export default {
         },
         ajax(method, path, postEvent) {
             axios[method.toLowerCase()](path).then(({ data }) => {
-                this.$toastr.success(data.message);
                 this.fetch();
+
                 if (postEvent) {
-                    this.$emit(postEvent);
+                    this.$emit(postEvent, data);
                 }
             }).catch((error) => {
                 this.state.meta.loading = false;
@@ -394,10 +429,10 @@ export default {
         action(method, path, postEvent) {
             this.state.meta.loading = true;
             axios[method.toLowerCase()](path, this.readRequest(method))
-                .then(() => {
+                .then(({ data }) => {
                     this.state.meta.loading = false;
                     if (postEvent) {
-                        this.$emit(postEvent);
+                        this.$emit(postEvent, data);
                     }
                 }).catch((error) => {
                     this.state.meta.loading = false;
@@ -524,7 +559,14 @@ export default {
                     .map(column => `${column.name}_custom_total`)
                 : [];
         },
+        hiddenColumns() {
+            return this.state.ready
+                ? this.state.template.columns && this.state.template.columns
+                    .filter(column => column.meta.hidden && column.meta.visible)
+                : [];
+        },
     },
+
     render() {
         return this.$slots.default;
     },
