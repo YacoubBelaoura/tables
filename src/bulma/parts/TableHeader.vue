@@ -6,7 +6,8 @@
                 selectBindings, selectEvents, sortEvents, clearSortEvents
             }">
             <thead>
-                <tr class="has-background-light"
+                <!-- <tr class="has-background-light" TODO: make a goog checkbox-->
+                <tr class="has-background-light bg-white-smoke"
                     :class="style">
                     <th class="table-header"
                         :class="align"
@@ -37,7 +38,8 @@
                                 {{ i18n(column.label) }}
                             </span>
                             <span class="table-header-controls">
-                                <span class="icon is-small has-text-info"
+                                <!-- <span class="icon is-small has-text-info" -->
+                                <span class="icon is-small has-text-info text-blue-400"
                                     v-if="column.tooltip"
                                     v-tooltip="i18n(column.tooltip)">
                                     <fa icon="info" size="xs"/>

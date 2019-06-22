@@ -4,12 +4,14 @@
             <td v-if="hiddenColumns().length || state.template.preview"/>
             <td v-if="state.template.crtNo"/>
             <td v-if="state.template.selectable"/>
-            <td class="has-text-centered is-bold"
+            <!-- <td class="has-text-centered is-bold" -->
+            <td class="has-text-centered is-bold font-semibold"
                 v-if="visibleColumn(state.template.columns[0])">
                 {{ i18n("Total") }}
             </td>
             <template v-for="i in columns.length - 1">
-                <td class="is-bold"
+                <!-- <td class="is-bold" -->
+                <td class="is-bold font-semibold"
                     :class="[{ 'is-money' : columns[i].money }, columnAlignment(columns[i])]"
                     :key="i"
                     v-if="visibleColumn(columns[i])">

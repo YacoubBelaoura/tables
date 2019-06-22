@@ -3,7 +3,8 @@
         <top-controls v-on="$listeners"/>
         <div class="table-responsive"
             v-responsive="state.template.responsive">
-            <table class="table is-fullwidth is-marginless"
+            <!-- <table class="table is-fullwidth is-marginless" -->
+            <table class="table is-fullwidth is-marginless w-full"
                 :class="state.template.style"
                 :id="id"
                 v-if="hasContent()">
@@ -30,7 +31,8 @@
             <loader v-if="state.meta.loading === true"/>
         </div>
         <bottom-controls v-if="hasContent()"/>
-        <div class="has-text-centered no-records-found"
+        <!-- <div class="has-text-centered no-records-found" -->
+        <div class="has-text-centered no-records-found text-center"
             v-if="isEmpty()">
             {{ i18n('No records were found') }}
         </div>
