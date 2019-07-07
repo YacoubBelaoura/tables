@@ -9,8 +9,10 @@
                 <template v-slot:options>
                     <a v-for="value in state.template.lengthMenu"
                         :key="value"
-                        class="dropdown-item has-text-centered"
-                        :class="{ 'is-active': isActive(value) }"
+                        class="dropdown-item rounded-sm block py-1 px-1
+                                whitespace-no-wrap w-full text-center
+                                cursor-pointer no-underline relative text-sm hover:bg-white-smoke"
+                        :class="{ 'is-active bg-blue-500 hover:bg-blue-400 font-semibold text-white': isActive(value) }"
                         v-on="optionEvents(value)">
                         {{ value }}
                     </a>

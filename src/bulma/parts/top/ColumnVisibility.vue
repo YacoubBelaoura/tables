@@ -9,8 +9,10 @@
         <template v-slot:options>
             <a v-for="(column, index) in visibleColumns()"
                 :key="index"
-                class="dropdown-item"
-                :class="{ 'is-active': column.meta.visible }"
+                class="dropdown-item rounded-sm block py-1 px-1
+                                whitespace-no-wrap w-full text-center
+                                cursor-pointer no-underline relative text-sm hover:bg-white-smoke"
+                :class="{ 'is-active bg-blue-500 hover:bg-blue-400 font-semibold text-white': column.meta.visible }"
                 @click="column.meta.visible = !column.meta.visible">
                 {{ i18n(column.label) }}
             </a>

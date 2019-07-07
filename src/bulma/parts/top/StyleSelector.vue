@@ -11,8 +11,10 @@
                 <template v-slot:options>
                     <a v-for="(style, key) in styles"
                         :key="key"
-                        class="dropdown-item"
-                        :class="{ 'is-active': hasStyle(style) }"
+                        class="dropdown-item rounded-sm block py-1 px-1
+                                whitespace-no-wrap w-full text-center
+                                cursor-pointer no-underline relative text-sm hover:bg-white-smoke"
+                        :class="{ 'is-active bg-blue-500 hover:bg-blue-400 font-semibold text-white': hasStyle(style) }"
                         v-on="optionEvents(style)">
                         {{ key }}
                     </a>

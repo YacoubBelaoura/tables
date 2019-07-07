@@ -1,8 +1,8 @@
 <template>
-    <span :class="{ 'is-clickable has-text-info': column.meta.clickable }"
+    <span :class="{ 'is-clickable has-text-info text-blue-400': column.meta.clickable }"
         @click="column.meta.clickable ? $emit('clicked') : null">
-        <span class="tag is-table-tag icon is-small"
-            :class="value ? 'is-success' : 'is-danger'"
+        <span class="tag is-table-tag icon is-small rounded"
+            :class="value ? 'is-success bg-green-400 text-white' : 'is-danger bg-red-400 text-white'"
             v-if="column.meta.boolean">
             <fa :icon="value ? 'check' : 'times'"/>
         </span>
